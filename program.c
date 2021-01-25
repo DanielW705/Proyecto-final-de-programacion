@@ -15,10 +15,6 @@ struct Byte
 {
     int bits[8];
 };
-struct XSixteenFour
-{
-    int bits[6];
-};
 struct Base64
 {
     int tipo;
@@ -26,7 +22,7 @@ struct Base64
 };
 struct TextBase64
 {
-    struct XSixteenFour *txtX64;
+    int *index;
     bool haveEcuals;
     int Hmany;
 };
@@ -35,7 +31,7 @@ struct TextBase64
 // Variables globales
 #pragma region variables globales
 // arreglos
-unsigned char palabra[] = "";
+unsigned char palabra[1000];
 struct Ascii TablaAscii[] = {
     {0,
      '\0'},
@@ -602,38 +598,74 @@ int pasarloABinario(int *codigoASCII, int length, struct Byte *arrBin)
 
     return 0;
 }
-int pasarloABase64(struct Byte *txtBn, struct TextBase64 *txtB64, int lengthChar)
+void pasarloABase64(struct Byte *txtBn, struct TextBase64 *txtB64, int lengthChar)
 {
     int tamstring64 = (lengthChar * 8) / 6;
-    struct XSixteenFour txtX64[tamstring64];
-    // int tamtxtBn = sizeof(txtBn[0]) / sizeof(struct Byte);
+    int index64[tamstring64];
     int tamByte = sizeof(txtBn->bits) / sizeof(int);
-    int tamX64 = sizeof(txtX64->bits) / sizeof(int);
-    for (int i = 0; i < tamstring64; i++)
+    int f = 5;
+    int g = 0;
+    int val = 0;
+    int tamTabla = sizeof(TablaBaseX64) / sizeof(struct Base64);
+    for (int i = 0; i < lengthChar; i++)
     {
-        for (int j = 0; j < lengthChar; j++)
+        for (int j = 0; j < tamByte; j++)
         {
-            for (int j = 0; j < tamByte; j++)
+            int x = txtBn[i].bits[j];
+            if (x == 1)
             {
-                int cont = 0;
-                if ((++cont % 6) < 0)
-                {
-                    cont = 0;
-                } 
-                else
-                {
-                }
+                val += pow(2, f);
+                f--;
+            }
+            else if (x == 0)
+            {
+                f--;
+            }
+            if (f == -1)
+            {
+                index64[g] = val;
+                val = 0;
+                f = 5;
+                g++;
             }
         }
     }
+    txtB64->index = index64;
+    txtB64->haveEcuals = true;
+    txtB64->Hmany = 6 - ((lengthChar * 8) % 6);
+    int sumatoria = tamstring64 + txtB64->Hmany;
+    char txtenB64[sumatoria + 1];
+    int j = 0;
+    for (int i = 0; i < sumatoria; i++)
+    {
+        if (i < tamstring64)
+        {
+            for (int k = 0; k < tamTabla; k++)
+            {
+                if (TablaBaseX64[k].tipo == txtB64->index[j])
+                {
+                    txtenB64[i] = TablaBaseX64[k].caracter;
+                    j++;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            if (i < sumatoria)
+                txtenB64[i] = '\\=';
+            else if (i == sumatoria)
+                txtenB64[i] = '\00';
+        }
+    }
 
-    return 0;
+    printf("\n\nSu texto codificado en base X64 es: %s\n", txtenB64);
 }
 #pragma endregion
 int main(int argc, char const *argv[])
 {
     int lengthChar = 0;
-    printf("Escribe algo: ");
+    printf("\n\nEscriba el mensaje que quiera combertir a base 64: ");
     fgets(palabra, 500, stdin);
     lengthChar = Length(palabra);
     int codigoAscii[lengthChar];
@@ -641,16 +673,8 @@ int main(int argc, char const *argv[])
     struct Byte txtbn[lengthChar];
     pasarloABinario(codigoAscii, lengthChar, &txtbn);
     struct TextBase64 txtX64;
-    pasarloABase64(txtbn, &txtX64, lengthChar);
-    int tam = (sizeof(txtbn[0].bits) / sizeof(int));
-    // for (int i = 0; i < lengthChar; i++)
-    // {
-    //     for (int j = 0; j < tam; j++)
-    //     {
-    //         printf("%d", txtbn[i].bits[j]);
-    //     }
-    //     printf("\n");
-    // }
+    pasarloABase64(&txtbn, &txtX64, lengthChar);
+    printf("\n");
     system("pause");
     return 0;
 }
