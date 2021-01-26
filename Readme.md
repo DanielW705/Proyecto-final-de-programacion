@@ -6,3 +6,4 @@ Para construr el archivo .exe con gcc el codigo es:
 ```
 gcc -o nombre program.c
 ```
+## el codigo ya esta acabado"# Proyecto-final-de-programacion" 
